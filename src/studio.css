@@ -1,0 +1,141 @@
+/* Shared studio form and viewer controls. */
+.studio-page .page-heading {
+  margin-bottom: 30px;
+}
+.studio-page-single {
+  max-width: 800px;
+}
+.studio-page .field select {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 13px;
+  margin-top: 8px;
+  background: color-mix(in srgb, var(--background) 45%, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--ink);
+}
+.studio-page .field {
+  margin-bottom: 22px;
+}
+.prompt-field textarea {
+  min-height: 145px;
+}
+.chat-field > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chat-field > label svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.chat-composer {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--background) 45%, var(--surface));
+  overflow: hidden;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.chat-composer:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.chat-composer.has-error {
+  border-color: var(--accent);
+}
+.chat-composer textarea {
+  display: block;
+  width: 100%;
+  min-height: 150px;
+  margin: 0;
+  padding: 18px 18px 10px;
+  border: 0;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--background) 45%, var(--surface));
+  line-height: 1.9;
+}
+.chat-composer textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+  border: 0;
+}
+.chat-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px 13px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.chat-count {
+  font-size: 9px;
+  white-space: nowrap;
+}
+.chat-toolbar .chat-send {
+  min-height: 40px;
+  padding: 10px 13px;
+  font-size: 11px;
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .chat-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .chat-toolbar .chat-send {
+    grid-column: 1/-1;
+    width: 100%;
+    margin-top: 3px;
+  }
+  .chat-composer textarea {
+    padding: 15px 14px 10px;
+  }
+}
+.optional-label {
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 10px;
+  margin-left: 7px;
+}
+.request-error {
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--surface));
+  border-radius: 10px;
+  padding: 18px;
+  margin-top: 20px;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.9;
+}
+.request-error .button {
+  margin-top: 15px;
+  min-height: 42px;
+  font-size: 11px;
+}
+.viewer-mode-tabs {
+  display: flex;
+  gap: 5px;
+  background: color-mix(in srgb, var(--ink) 4%, var(--surface));
+  padding: 4px;
+  border-radius: 8px;
+  margin-top: 0;
+}
+.viewer-mode-tabs button {
+  flex: 1;
+  font-size: 10px;
+  padding: 10px 7px;
+  min-height: 42px;
+  border-radius: 6px;
+  background: transparent;
+}
+.viewer-mode-tabs button.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 6px #4737220d;
+}

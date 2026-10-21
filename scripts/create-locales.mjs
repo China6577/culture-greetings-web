@@ -1,5 +1,9 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import uiTranslations from './ui-translations.mjs'
+import studioTranslations from './studio-translations.mjs'
+import homeTranslations from './home-translations.mjs'
+import libraryTranslations from './library-translations.mjs'
+import aiTranslations from './ai-translations.mjs'
 const en = {
   navHome: 'Home',
   navCulture: 'Explore cultures',
@@ -558,7 +562,7 @@ const extra = {
     skipMain: 'Skip to content',
     loadingPage: 'Loading your experience…',
     errorTitle: 'This page needs a fresh start.',
-    errorBody: 'Your saved draft is still on this device. Reload to continue.',
+    errorBody: 'Reload the page to try again.',
     retry: 'Reload page',
   },
   'en-GB': {
@@ -567,7 +571,7 @@ const extra = {
     skipMain: 'Skip to content',
     loadingPage: 'Loading your experience…',
     errorTitle: 'This page needs a fresh start.',
-    errorBody: 'Your saved draft is still on this device. Reload to continue.',
+    errorBody: 'Reload the page to try again.',
     retry: 'Reload page',
   },
   'zh-CN': {
@@ -576,7 +580,7 @@ const extra = {
     skipMain: '跳转到主要内容',
     loadingPage: '正在准备页面…',
     errorTitle: '页面需要重新准备一下。',
-    errorBody: '已保存的草稿仍在本机，刷新后可继续。',
+    errorBody: '请刷新页面后重试。',
     retry: '重新加载页面',
   },
   'ja-JP': {
@@ -585,7 +589,7 @@ const extra = {
     skipMain: '本文へ移動',
     loadingPage: 'ページを準備しています…',
     errorTitle: 'ページをもう一度開きましょう。',
-    errorBody: '保存した下書きはこの端末に残っています。再読み込みして続けてください。',
+    errorBody: 'ページを再読み込みして、もう一度お試しください。',
     retry: '再読み込み',
   },
   'fr-FR': {
@@ -594,8 +598,7 @@ const extra = {
     skipMain: 'Aller au contenu',
     loadingPage: 'Préparation de votre page…',
     errorTitle: 'Cette page a besoin d’un nouveau départ.',
-    errorBody:
-      'Votre brouillon enregistré reste sur cet appareil. Rechargez la page pour continuer.',
+    errorBody: 'Rechargez la page pour réessayer.',
     retry: 'Recharger la page',
   },
 }
@@ -611,6 +614,18 @@ for (const [lang, data] of Object.entries({
   if (missing.length) throw new Error(`${lang}: ${missing}`)
   writeFileSync(
     `src/locales/${lang}.json`,
-    JSON.stringify({ ...data, ...extra[lang], ...uiTranslations[lang] }, null, 2) + '\n',
+    JSON.stringify(
+      {
+        ...data,
+        ...extra[lang],
+        ...uiTranslations[lang],
+        ...studioTranslations[lang],
+        ...homeTranslations[lang],
+        ...libraryTranslations[lang],
+        ...aiTranslations[lang],
+      },
+      null,
+      2,
+    ) + '\n',
   )
 }

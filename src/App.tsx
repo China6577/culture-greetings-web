@@ -1,20 +1,24 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { MotionConfig, motion, useReducedMotion } from 'framer-motion'
-import { Heart, LoaderCircle } from 'lucide-react'
+import { LoaderCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ThemeProvider, useCulture } from './components/ThemeProvider'
 import { Header } from './components/Header'
 import Home from './pages/Home'
+import MyCards from './pages/MyCards'
+import { clearLegacyDrafts } from './features/card-generation/session'
 const CreateCard = lazy(() => import('./pages/CreateCard'))
 const Generate = lazy(() => import('./pages/Generate'))
 const CardViewer = lazy(() => import('./pages/CardViewer'))
-const Settings = lazy(() => import('./pages/Settings'))
 function Layout() {
   const location = useLocation()
   const { t } = useTranslation()
   const { motion: motionEnabled } = useCulture()
   const reduced = useReducedMotion()
+  useEffect(() => {
+    clearLegacyDrafts()
+  }, [])
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [location.pathname])
@@ -23,7 +27,7 @@ function Layout() {
       '/': 'navHome',
       '/create': 'navCreate',
       '/generate': 'generatePageTitle',
-      '/settings': 'navSettings',
+      '/cards': 'navCards',
     }
     const titleKey = location.pathname.startsWith('/card/')
       ? 'cardPageTitle'
@@ -58,8 +62,9 @@ function Layout() {
             <Route path="/create" element={<CreateCard />} />
             <Route path="/generate" element={<Generate />} />
             <Route path="/card/:id" element={<CardViewer />} />
+            <Route path="/cards" element={<MyCards />} />
             <Route path="/culture" element={<Navigate to="/" replace />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings" element={<Navigate to="/" replace />} />
             <Route
               path="*"
               element={
@@ -77,10 +82,6 @@ function Layout() {
           {t('brandName')} <span>{t('brandTagline')}</span>
         </Link>
         <p>{t('footer')}</p>
-        <span>
-          {t('phase')}
-          <Heart size={13} />
-        </span>
       </footer>
     </MotionConfig>
   )

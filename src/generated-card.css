@@ -1,0 +1,322 @@
+.generated-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  min-height: calc(min(100cqi, 370px) * 16 / 9);
+  display: flex;
+  flex-direction: column;
+  background: var(--generated-paper);
+  color: var(--generated-ink);
+  border: 1px solid #302d291a;
+  border-radius: 9px;
+  box-shadow: 0 16px 40px #493b2712;
+}
+.generated-card-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+.generated-card-content {
+  position: relative;
+  z-index: 1;
+  margin-top: 65cqi;
+  padding: 50px 26px 22px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  background: linear-gradient(
+    transparent,
+    color-mix(in srgb, var(--generated-paper) 85%, transparent) 35%,
+    var(--generated-paper)
+  );
+}
+.generated-card-title {
+  font-family: var(--body-font);
+  color: var(--generated-accent);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.generated-card-content h2 {
+  font-size: 25px;
+  line-height: 1.5;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.generated-card-message {
+  font-size: 16px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.generated-card-sender {
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.generated-card-seal {
+  margin-top: auto;
+  padding-top: 28px;
+  font-family: var(--body-font);
+  color: var(--generated-accent);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+.generated-card-living[data-image-motion='drift'] .generated-card-image {
+  animation: living-card-image var(--image-cycle) ease-in-out infinite alternate;
+}
+.generated-card-living[data-image-motion='breathe'] .generated-card-image {
+  animation: living-card-breathe var(--image-cycle) ease-in-out infinite alternate;
+}
+@keyframes living-card-breathe {
+  from {
+    transform: scale(1.005);
+  }
+  to {
+    transform: scale(1.035);
+  }
+}
+@keyframes living-card-image {
+  from {
+    transform: scale(1.015) translateY(0);
+  }
+  to {
+    transform: scale(1.045) translateY(-4px);
+  }
+}
+.generated-card-mini {
+  height: 100%;
+  min-height: 0;
+  border-radius: 5px;
+  box-shadow: none;
+}
+.generated-card-mini .generated-card-content {
+  margin-top: 45cqi;
+  padding: 25px 13px 13px;
+  gap: 9px;
+}
+.generated-card-mini .generated-card-title {
+  font-size: 8px;
+}
+.generated-card-mini .generated-card-content h2 {
+  font-size: 16px;
+}
+.generated-card-mini .generated-card-message {
+  font-size: 11px;
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.generated-card-mini .generated-card-sender {
+  font-size: 9px;
+}
+.generated-image-error {
+  position: relative;
+  padding: 15px;
+  font-family: var(--body-font);
+  font-size: 12px;
+}
+.agent-intro {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+  margin-top: 18px;
+}
+.agent-steps {
+  margin-top: 28px;
+}
+.agent-steps small {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+}
+.card-animation {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 56%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: linear-gradient(#000 65%, transparent);
+}
+.card-animation[data-region='edges'] {
+  height: 100%;
+  mask-image: linear-gradient(
+    90deg,
+    #000,
+    #000 7%,
+    transparent 17%,
+    transparent 83%,
+    #000 93%,
+    #000
+  );
+}
+.card-particle {
+  position: absolute;
+  display: block;
+  width: var(--particle-size);
+  height: var(--particle-size);
+  background: var(--particle-color);
+  opacity: 0;
+  animation-duration: var(--particle-duration);
+  animation-delay: var(--particle-delay);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+.card-animation[data-effect='petals'] .card-particle {
+  border-radius: 80% 12% 75% 18%;
+  box-shadow: inset 1px 1px 2px #ffffff65;
+  animation-name: card-petal-fall;
+}
+.card-animation[data-effect='confetti'] .card-particle {
+  height: calc(var(--particle-size) * 0.45);
+  border-radius: 1px;
+  animation-name: card-confetti-fall;
+}
+.card-animation[data-effect='confetti'] .card-particle:nth-child(3n) {
+  border-radius: 50%;
+  height: var(--particle-size);
+}
+.card-animation[data-effect='stars'] .card-particle {
+  width: max(9px, calc(var(--particle-size) * 1.6));
+  height: max(9px, calc(var(--particle-size) * 1.6));
+  background: transparent;
+  animation-name: card-star-shimmer;
+  animation-timing-function: ease-in-out;
+  mix-blend-mode: screen;
+}
+.card-animation[data-effect='stars'] .card-particle::before,
+.card-animation[data-effect='stars'] .card-particle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.card-animation[data-effect='stars'] .card-particle::before {
+  background: var(--particle-color);
+  clip-path: polygon(50% 0, 61% 38%, 100% 50%, 61% 62%, 50% 100%, 39% 62%, 0 50%, 39% 38%);
+}
+.card-animation[data-effect='stars'] .card-particle::after {
+  inset: -65%;
+  background: radial-gradient(circle, var(--particle-color), transparent 67%);
+  opacity: 0.55;
+}
+.card-animation[data-effect='stars'] .card-particle:nth-child(3n) {
+  width: max(5px, calc(var(--particle-size) * 0.7));
+  height: max(5px, calc(var(--particle-size) * 0.7));
+}
+.card-animation[data-effect='stars'] .card-particle:nth-child(3n)::before {
+  clip-path: none;
+  border-radius: 50%;
+  box-shadow: 0 0 9px var(--particle-color);
+}
+.card-animation[data-effect='glow'] .card-particle {
+  width: calc(var(--particle-size) * 5);
+  height: calc(var(--particle-size) * 5);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--particle-color), transparent 70%);
+  filter: blur(3px);
+  animation-name: card-glow-rise;
+  animation-timing-function: ease-in-out;
+}
+.card-animation[data-effect='fireworks'] .card-particle {
+  width: calc(var(--particle-size) * 6);
+  height: calc(var(--particle-size) * 6);
+  background: transparent;
+  animation-name: card-firework-bloom;
+}
+.card-animation[data-effect='fireworks'] svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--particle-color);
+  stroke: var(--particle-color);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+@keyframes card-petal-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, -10px) rotate(var(--particle-rotation));
+  }
+  12% {
+    opacity: var(--particle-opacity);
+  }
+  85% {
+    opacity: var(--particle-opacity);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--particle-wind), 110cqi)
+      rotate(calc(var(--particle-rotation) + 210deg));
+  }
+}
+@keyframes card-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, -10px) rotate(var(--particle-rotation)) rotateY(0);
+  }
+  15% {
+    opacity: var(--particle-opacity);
+  }
+  80% {
+    opacity: var(--particle-opacity);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--particle-wind), 110cqi)
+      rotate(calc(var(--particle-rotation) + 300deg)) rotateY(340deg);
+  }
+}
+@keyframes card-star-shimmer {
+  0%,
+  100% {
+    opacity: calc(var(--particle-opacity) * 0.12);
+    transform: translate(0, 4px) scale(0.55) rotate(-8deg);
+  }
+  45%,
+  55% {
+    opacity: var(--particle-opacity);
+    transform: translate(var(--particle-wind), -5px) scale(1.15) rotate(20deg);
+  }
+}
+@keyframes card-glow-rise {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 18px) scale(0.75);
+  }
+  50% {
+    opacity: var(--particle-opacity);
+    transform: translate(var(--particle-wind), -22px) scale(1.1);
+  }
+}
+@keyframes card-firework-bloom {
+  0%,
+  60%,
+  100% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  10% {
+    opacity: var(--particle-opacity);
+    transform: scale(0.4);
+  }
+  35% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .generated-card-image {
+    animation: none !important;
+  }
+  .card-animation {
+    display: none;
+  }
+}

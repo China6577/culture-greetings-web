@@ -1,33 +1,15 @@
-import { languages, type Language } from '../themes/types'
+import type { Language } from '../themes/types'
 export interface LocationResult {
   country: string
   language: Language
-  source: 'mock' | 'remote' | 'fallback'
+  source: 'browser'
 }
-export async function getLocation(signal?: AbortSignal): Promise<LocationResult> {
-  try {
-    const response = await fetch('/api/location', {
-      signal: AbortSignal.any([AbortSignal.timeout(3500), ...(signal ? [signal] : [])]),
-    })
-    if (!response.ok) throw new Error('Location unavailable')
-    const data: unknown = await response.json()
-    if (
-      !data ||
-      typeof data !== 'object' ||
-      !('country' in data) ||
-      typeof data.country !== 'string'
-    )
-      throw new Error('Invalid location')
-    const language =
-      'language' in data && languages.includes(data.language as Language)
-        ? (data.language as Language)
-        : 'en-US'
-    return {
-      country: data.country,
-      language,
-      source: 'source' in data && data.source === 'mock' ? 'mock' : 'remote',
-    }
-  } catch {
-    return { country: 'GLOBAL', language: 'en-US', source: 'fallback' }
-  }
+export async function getLocation(): Promise<LocationResult> {
+  const locale = typeof navigator === 'undefined' ? 'zh-CN' : navigator.language
+  if (locale.startsWith('ja')) return { country: 'JP', language: 'ja-JP', source: 'browser' }
+  if (locale.startsWith('fr')) return { country: 'FR', language: 'fr-FR', source: 'browser' }
+  if (locale.startsWith('zh')) return { country: 'CN', language: 'zh-CN', source: 'browser' }
+  if (locale.toLowerCase() === 'en-gb')
+    return { country: 'GB', language: 'en-GB', source: 'browser' }
+  return { country: 'GLOBAL', language: 'en-US', source: 'browser' }
 }

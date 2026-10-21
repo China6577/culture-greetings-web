@@ -14,6 +14,20 @@ node_modules
 dist
 dist-ssr
 *.local
+**/__pycache__/
+**/.pytest_cache/
+reports/
+uploads/
+generated-assets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
 
 # Editor directories and files
 .vscode/*

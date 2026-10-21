@@ -1,0 +1,75 @@
+name: culture-greetings-web
+services:
+  db:
+    image: culture-greetings-web-db:phase3
+    build:
+      context: .
+      dockerfile: docker/db.Dockerfile
+    environment:
+      POSTGRES_DB: greetings
+      POSTGRES_USER: greetings
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run the setup script to create .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U greetings -d greetings']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  api:
+    image: culture-greetings-web-api:phase3
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://greetings:${POSTGRES_PASSWORD}@db:5432/greetings
+      AGNES_API_KEY: ${AGNES_API_KEY:-}
+      ASSETS_DIR: /data/cards
+    volumes:
+      - generated-assets:/data/cards
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          CMD,
+          python,
+          -c,
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=5)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+  web:
+    image: culture-greetings-web-web:phase3
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    ports:
+      - '127.0.0.1:${WEB_PORT:-5173}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  tools:
+    profiles: [tools]
+    image: culture-greetings-web-tools:phase3
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: build
+    command: [npm, test]
+volumes:
+  postgres-data:
+  generated-assets:
+networks:
+  default: {}

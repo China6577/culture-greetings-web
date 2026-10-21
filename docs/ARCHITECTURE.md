@@ -1,78 +1,51 @@
-# 系统设计与扩展契约
+# culture-greetings-web · 多智能体生成架构
 
-## 数据流
+## 流程
 
 ```mermaid
 flowchart LR
-  API[GET /api/location] --> Location[LocationService 验证 / 超时回退]
-  Location --> Provider[ThemeProvider]
-  Settings[手动设置] --> Provider
-  Provider --> Registry[文化主题注册表]
-  Registry --> CSS[CSS 设计变量 / 字体 / 资源 / 动画]
-  Provider --> I18N[i18next]
-  Draft[用户原文 / 场景] --> Preview[CardService 演示数据协议 v1]
-  Registry --> Preview
-  Preview --> Viewer[H5 展示 / 分享]
+  UI[国家 / 语言 / 描述 / 原文] --> Job[持久化生成任务]
+  Job --> Planner[需求解析角色]
+  Planner --> Culture[文化策划角色]
+  Culture --> Copy[文案创作角色]
+  Copy --> Design[视觉设计角色]
+  Design --> Motion[动效设计角色]
+  Motion --> Review[视觉 / 文案 / 动效审核]
+  Review -->|不通过：最多修订一次| Design
+  Review -->|通过| Artist[Agnes Image 2.5 Flash]
+  Artist --> Validate[图片格式与完整性检查]
+  Validate --> Save[作品 JSON / 图片卷]
 ```
 
-国家是语言与视觉主题的唯一来源，Provider 仅存储国家及动画偏好，并从主题注册表派生对应语言与主题。所有选择入口均只更新国家；旧偏好的独立语言和主题覆盖被丢弃。用户操作的版本号使正在返回的旧定位响应无法覆盖新选择。已保存国家优先；损坏或未知配置会触发重新识别。文化探索页面已移除，旧路由重定向至首页。
+协调器使用 asyncio 顺序编排，每个角色完成后才启动下一角色，文案读取已完成的文化方案。文本角色均调用 Agnes 2.5 Flash，独立的角色指令及 Pydantic schema 校验隔离职责；无效结构最多修复一次，审核最多修订一次。修订时文案、视觉、动效、审核也顺序执行，视觉读取修订后的文案。网络、认证、额度、图片输出错误不自动重复扣费请求，不回退至预设模板。应用对国家、语言、姓名和用户原祝福实行硬约束；文化意象、节日、风格和负向要求通过方案编写及审核约束。
 
-## 定位接口
+## AI 控制的 H5 动效
 
-请求：`GET /api/location`，响应 JSON：
+动效角色读取原始描述、需求解析、文化策划、文案与视觉方案，真实调用文本模型生成 `AnimationPlan`。审核角色同时读取这份方案；修订时重新生成动效再审核。图片生成模型仍只负责插画，动画由网页组件执行，未接入视频生成。
 
-```typescript
-interface LocationResponse {
-  country: string // ISO alpha-2，如 CN/JP/US/GB/FR；未知映射至 GLOBAL
-  language: string // 支持的 BCP 47 locale
-  source?: 'mock' // 本地模拟显式标记；真实服务不返回 mock
-}
-```
+方案包括 effect（petals/stars/confetti/fireworks/glow/none）、1–3 个六位十六进制颜色、粒子数、6–20 秒周期、透明度、尺寸、风向、区域及底图运动。粒子数不超过 24，透明度不超过 0.55；不允许任意动画代码、外部素材地址或文本区域。模型可返回无粒子、无底图运动以遵循明确的静止要求。
 
-超时 3500ms；HTTP、JSON、结构与网络异常均回退 Global。语言固定采用国家文化配置，不接受独立覆盖。默认模拟 CN 由 `vite.config.ts` 集中配置。真实 IP 服务应由服务端根据可信代理头或连接来源识别，避免信任客户端任意提供的国家。VPN 与代理不保证可识别，应始终提供手动切换。
+服务端 Pydantic 和前端入站校验共同约束方案。前端只执行已实现的动画原语，不执行模型代码。粒子位置按作品 ID 确定，参数保存在作品 JSON 中；查看和分享不重新生成动效，重渲染不随机重排粒子。背景图片节点在静态/H5 切换时保持，文字固定。默认静态，H5 时才挂载装饰层，支持系统 reduced-motion 和已有环境动效偏好。
 
-## 主题协议
+静态旧作品没有 animation 字段时仍可读取，不清空或重画现有图片。本次只扩展作品 JSON，不需要数据库表迁移。
 
-`CultureTheme` 是唯一主题契约，包含 country、language、colors、typography、assets、animation、culture。primary、secondary、background 保留需求规定的颜色；accent 为可读性优化后的按钮/文字色，防止浅粉或金色按钮白字对比不足。页面组件只消费主题与翻译。每个国家新增一个配置对象与资源，不复制页面。
+## API
 
-进入动画与环境动画分别由主题 entrance / ambient 描述；首页共用 GSAP 入场，环境元素通过 ambient CSS 类选择，后续可扩展独立入场注册表。文化文字采用本地 JSON 管理，视觉符号与节庆原名保存在文化配置中。
+- POST `/api/generations`：创建请求，202 返回随机 job ID。request_id 保证同内容重试不重复排队，不同内容复用 ID 返回 409。
+- GET `/api/generations/{id}`：仅返回任务状态、实际角色事件、错误代码及完成后的作品，不返回输入或内部角色成果。
+- GET `/api/cards`：page/page_size 分页作品，按时间与 ID 双重倒序。
+- GET `/api/cards/{id}`：读取 v3 图片贺卡。
+- GET `/api/assets/{id}.png`：只有对应作品存在时才返回 PNG，禁止任意文件路径。
+- DELETE `/api/cards/{id}`：删除作品、相关任务和图片。
+- POST `/api/cards/bulk-delete`：提交 1–100 个唯一作品 ID，先完整校验，再在一个数据库事务内删除所选作品及相关任务，随后清除对应图片。已不存在的作品不报错，便于安全重试；不会删除未选择的作品。
+- GET `/api/health`：数据库状态、提供方与模型名、密钥是否已配置；不返回密钥。
 
-## 贺卡协议
+## 数据及生命周期
 
-`Card` v1 包含 id、country（生成时的国家快照）、language、recipient、sender、message、occasion、createdAt、version。创建时由 country 派生 language；读取旧卡片与分享链接时按国家纠正不匹配的语言。贺卡自身的系统文字也固定使用该国对应语言；用户填写的原文保留。当前的“生成”是本地预览，没有生成式内容。切换全站国家不会修改已保存贺卡的国家快照。
+`card_compositions` 保存 v3 成品 JSON、原用户输入及元数据，`generation_jobs` 保存 request_id、请求摘要、输入、事件和角色成果。外部 API Key 仅从后端环境读取。图片仅接受有上限的 Base64 PNG/JPEG/WebP，经过 Pillow 校验再重编码为 PNG，存入专属图片卷；不直接渲染模型返回的 HTML、SVG、CSS 或远程脚本。
 
-分享通过 UTF-8 → Base64URL 组成 `/card/:id?d=<payload>`。解码后检查版本、支持的主题、语言、场景、字段类型与长度、时间格式、ID。分享数据只作为 React 文本渲染，禁止 innerHTML。有效分享内容优先于本机数据；损坏链接回退到同 ID 本机记录，否则展示空状态。
+数据库和 API 只有 Compose 内网通信，Web 绑定 127.0.0.1。前端不接触密钥、不保存草稿，生成 URL 只含随机任务 ID。当前没有登录功能，随机地址不是账户鉴权，部署为公共多人服务前需要实现账户、资源权限、配额和 HTTPS。
 
-Base64URL 是编码，不是加密。当前适合演示，不具备访问控制、可撤销链接、审计或服务端存储。下一阶段可替换为不透明分享 ID，使用服务端签名/权限和内容存储。
+单个后台队列 worker 串行处理作品，各作品内部角色也顺序执行。服务重启会把旧 running 任务标记为中断，不自动重发可能已产生用量的图片请求；queued 任务继续处理。最长整单 900 秒，单次文本 120 秒、图片 360 秒。客户端仅轮询任务进度，断开不会取消后端生成。
 
-## 未来服务边界
-
-```typescript
-interface GenerationRequest {
-  culture: string
-  locale: string
-  occasion: string
-  userText: string
-}
-interface GenerationJob {
-  id: string
-  status: 'queued' | 'understanding' | 'designing' | 'rendering' | 'completed' | 'failed'
-  progress: number
-  cardId?: string
-  error?: { code: string; retryable: boolean }
-}
-```
-
-这些仅为扩展建议，当前未引入后端框架。未来用服务端创建生成任务，SSE/轮询替换演示定时器；文化知识库与向量检索置于服务端；图片生成产物以受控资源 URL 写入卡片协议；用户系统与后台共享 API 权限和版本化 schema。
-
-## 非功能约束
-
-- TypeScript strict；路由懒加载，Lottie 仅在模拟生成页加载。
-- 无外部图片/字体依赖，首次打开即可展示全部文化视觉。
-- 语义按钮、表单可访问标签、键盘焦点、移动菜单、系统减少动效。
-- 本地存储读取/写入均可容错；不解析并执行贺卡中的 HTML。
-- 本阶段未使用 Docker Compose 或 Python 依赖。
-
-## 验证
-
-`npm test` 覆盖协议损坏、大小限制、跨语言分享往返、空白消息、未知国家回退、五份资源键完整性和定位错误。`npm run build` 执行严格类型检查与生产打包。完整交互与响应式仍需浏览器验证，不能用构建成功替代。
+PostgreSQL 从 pgvector 镜像切换为普通 postgres:17，同版本数据库卷继续使用。迁移删除所有旧作品和检索表，并 DROP EXTENSION vector。历史迁移仅用于兼容升级链，运行时代码、依赖和配置均没有向量或本地 AI 模型。

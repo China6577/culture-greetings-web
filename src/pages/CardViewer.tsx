@@ -1,41 +1,48 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Check, Copy, Expand, Mail, Share2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import { Check, Copy, LoaderCircle, Mail, Share2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { cardLink, decodeCard, isCard, loadCard, type Card } from '../services/cardService'
-import { CardExperience } from '../components/CardExperience'
+import { GeneratedCard } from '../components/GeneratedCard'
+import { fetchComposition, isComposition, ApiError } from '../services/cardApi'
+import type { CardMode, Composition } from '../types/card'
 export default function CardViewer() {
   const { id = '' } = useParams()
-  const [params] = useSearchParams()
   const location = useLocation()
   const { t } = useTranslation()
-  const container = useRef<HTMLDivElement>(null)
+  const [card, setCard] = useState<Composition | null>(() =>
+    isComposition(location.state?.composition) && location.state.composition.id === id
+      ? location.state.composition
+      : null,
+  )
+  const [loading, setLoading] = useState(!card)
+  const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  const [mode, setMode] = useState<CardMode>('static')
   const [notice, setNotice] = useState('')
   const [shareUrl, setShareUrl] = useState('')
-  const [full, setFull] = useState(false)
-  const passed: unknown = location.state?.card
-  const linked = decodeCard(params.get('d'))
-  const card: Card | null =
-    linked?.id === id ? linked : isCard(passed) && passed.id === id ? passed : loadCard(id)
   useEffect(() => {
-    const handle = () => setFull(!!document.fullscreenElement)
-    document.addEventListener('fullscreenchange', handle)
-    return () => document.removeEventListener('fullscreenchange', handle)
-  }, [])
-  if (!card)
-    return (
-      <div className="container empty-page">
-        <Mail size={48} strokeWidth={1} />
-        <h1>{t('missingTitle')}</h1>
-        <p>{t('missingBody')}</p>
-        <Link to="/create" className="button">
-          {t('create')}
-        </Link>
-      </div>
-    )
-  const share = async () => {
-    const url = cardLink(card)
-    // Keep a selectable link visible even when native sharing is cancelled or unavailable.
+    const controller = new AbortController()
+    setError('')
+    setLoading(true)
+    void fetchComposition(id, controller.signal)
+      .then((value) => {
+        setCard(value)
+        setMode('static')
+      })
+      .catch((failure) => {
+        if (!controller.signal.aborted) {
+          setCard(null)
+          setError(failure instanceof ApiError ? failure.code : 'network_error')
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
+  }, [id, attempt])
+  async function share() {
+    if (!card) return
+    const url = `${window.location.origin}/card/${card.id}`
     setShareUrl(url)
     try {
       if (navigator.share) await navigator.share({ title: t('shareTitle'), url })
@@ -43,56 +50,63 @@ export default function CardViewer() {
         await navigator.clipboard.writeText(url)
         setNotice('copied')
       }
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return
-      setShareUrl(url)
-      setNotice('shareError')
+    } catch (failure) {
+      if (!(failure instanceof DOMException && failure.name === 'AbortError'))
+        setNotice('shareError')
     }
   }
-  const fullscreen = async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen()
-      else if (container.current?.requestFullscreen) await container.current.requestFullscreen()
-      else setNotice('fullScreenError')
-    } catch {
-      setNotice('fullScreenError')
-    }
-  }
+  if (loading)
+    return (
+      <div className="page-loading" role="status">
+        <LoaderCircle className="spinner" />
+        {t('p2.loadingCard')}
+      </div>
+    )
+  if (!card)
+    return (
+      <div className="container empty-page">
+        <Mail size={48} strokeWidth={1} />
+        <h1>{t('missingTitle')}</h1>
+        <p>
+          {error === 'card_not_found'
+            ? t('missingBody')
+            : t(`ai.error.${error}`, { defaultValue: t('ai.error.generation_failed') })}
+        </p>
+        {error !== 'card_not_found' && (
+          <button className="button button-outline" onClick={() => setAttempt((v) => v + 1)}>
+            {t('p2.retry')}
+          </button>
+        )}
+        <Link to="/create" className="button">
+          {t('create')}
+        </Link>
+      </div>
+    )
   return (
     <div className="container viewer-page">
-      <div className="page-heading">
-        <p className="eyebrow">{t('viewerEyebrow')}</p>
-        <h1>{t('viewerTitle')}</h1>
-        <p>{t('viewerBody')}</p>
-      </div>
       <div className="viewer-layout">
-        <div className="viewer-stage" ref={container}>
-          <CardExperience card={card} country={card.country} />
-          {full && (
-            <button className="button fullscreen-close" onClick={fullscreen}>
-              {t('exitFullScreen')}
-            </button>
-          )}
+        <div className="viewer-stage">
+          <GeneratedCard card={card} mode={mode} />
         </div>
-        <aside className="viewer-tools panel">
-          <span className="eyebrow">{t('brandName')} · H5</span>
-          <h2>{card.recipient}</h2>
-          <p className="muted">{t(`theme.${card.country}`)}</p>
+        <div className="viewer-controls">
+          <div className="viewer-mode-tabs">
+            {(['static', 'h5'] as const).map((value) => (
+              <button
+                key={value}
+                className={mode === value ? 'active' : ''}
+                aria-pressed={mode === value}
+                onClick={() => setMode(value)}
+              >
+                {t(`p2.mode.${value}`)}
+              </button>
+            ))}
+          </div>
           <div className="viewer-actions">
             <button className="button" onClick={share}>
               <Share2 size={17} />
               {t('share')}
             </button>
-            <button className="button button-outline" onClick={fullscreen}>
-              <Expand size={17} />
-              {t(full ? 'exitFullScreen' : 'fullScreen')}
-            </button>
-            <Link className="text-link" to="/create">
-              <ArrowLeft size={16} />
-              {t('edit')}
-            </Link>
           </div>
-          <p className="demo-note">{t('demo')}</p>
           {notice && (
             <p className="notice" role="status">
               {notice === 'copied' ? <Check size={16} /> : <Copy size={16} />} {t(notice)}
@@ -101,10 +115,15 @@ export default function CardViewer() {
           {shareUrl && (
             <label className="field">
               {t('shareFallback')}
-              <textarea readOnly value={shareUrl} onFocus={(e) => e.target.select()} rows={3} />
+              <textarea
+                readOnly
+                value={shareUrl}
+                onFocus={(event) => event.target.select()}
+                rows={2}
+              />
             </label>
           )}
-        </aside>
+        </div>
       </div>
     </div>
   )

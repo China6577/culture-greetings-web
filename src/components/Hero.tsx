@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, Globe2, Heart, Languages, MapPin, Sparkles } from 'lucide-react'
+import { ArrowRight, Globe2, Heart, Languages, Mail } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useReducedMotion } from 'framer-motion'
 import gsap from 'gsap'
@@ -8,7 +8,7 @@ import { useCulture } from './ThemeProvider'
 import { AnimatedBackground } from './AnimatedBackground'
 export function Hero() {
   const { t } = useTranslation()
-  const { currentTheme: theme, country, source, loading, motion } = useCulture()
+  const { currentTheme: theme, country, motion } = useCulture()
   const root = useRef<HTMLElement>(null)
   const reduced = useReducedMotion()
   useEffect(() => {
@@ -39,17 +39,11 @@ export function Hero() {
     }, root)
     return () => context.revert()
   }, [motion, reduced, theme.animation.entrance])
-  const sourceKeys: Record<string, string> = {
-    mock: 'locationMock',
-    remote: 'locationRemote',
-    fallback: 'locationFallback',
-    manual: 'locationManual',
-  }
   return (
     <section className="hero container" ref={root}>
       <div className="hero-copy">
         <div className="hero-eyebrow hero-reveal">
-          <span className="tiny-spark">✳</span>
+          <Mail size={16} strokeWidth={1.5} />
           {t('homeEyebrow')}
         </div>
         <h1 className="hero-reveal">
@@ -61,9 +55,12 @@ export function Hero() {
         <div className="hero-buttons hero-reveal">
           <Link to="/create" className="button">
             {t('create')}
-            <ArrowUpRight size={18} />
+            <span className="hero-button-arrow">
+              <ArrowRight size={20} />
+            </span>
           </Link>
         </div>
+        <p className="hero-start-note hero-reveal">{t('home.startNote')}</p>
         <div className="hero-proof hero-reveal">
           <span>
             <Globe2 />
@@ -80,12 +77,15 @@ export function Hero() {
         </div>
       </div>
       <div className="hero-visual">
-        <div className="orbit-text">{t('connectionNote')}</div>
+        <div className="hero-gallery-head">
+          <span>{t('home.inspiration')}</span>
+          <span className="hero-edition">{theme.country}</span>
+        </div>
         <div className="postcard-stage">
           <div className="postcard-paper">
             <div className="postcard-top">
-              <span>{t('postalClub')}</span>
-              <span>{theme.country} — 001</span>
+              <span>{t('brandName')}</span>
+              <Mail size={17} strokeWidth={1.25} />
             </div>
             <div className="postcard-art">
               <img
@@ -95,42 +95,27 @@ export function Hero() {
                 height="500"
               />
               <AnimatedBackground />
-              <div className="art-caption">
-                <span>{t(`country.${country}`)}</span>
-                <small>{t(`theme.${country}`)}</small>
-              </div>
               <span className="postage-stamp">
-                <Globe2 size={24} />
+                <Globe2 size={22} />
                 <span>{t('withLove')}</span>
               </span>
             </div>
             <div className="postcard-greeting">
+              <span className="postcard-salutation">{t('home.forSomeone')}</span>
               <span>{theme.greeting}</span>
-              <Heart size={16} />
+              <div className="postcard-signature">
+                <span />
+                <Heart size={15} strokeWidth={1.2} />
+              </div>
             </div>
           </div>
-          <div className="postcard-shadow" />
         </div>
-        <div className="location-float">
-          <span className="location-icon">
-            <MapPin size={19} />
+        <div className="hero-gallery-caption">
+          <span>
+            <Globe2 size={15} strokeWidth={1.4} />
+            {t(`country.${country}`)}
           </span>
-          <div>
-            <span className="location-label">
-              {loading ? t('locating') : t(sourceKeys[source] ?? 'locationMock')}
-            </span>
-            <strong>
-              {t(`country.${country}`)}
-              <span className="live-dot" />
-            </strong>
-          </div>
-          <Link to="/settings" aria-label={t('change')}>
-            <ArrowUpRight size={19} />
-          </Link>
-        </div>
-        <div className="made-for-you">
-          <Sparkles size={15} />
-          {t('cultureMatch')}
+          <span>{t(`theme.${country}`)}</span>
         </div>
       </div>
     </section>

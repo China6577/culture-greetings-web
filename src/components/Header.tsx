@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { ArrowUpRight, Mail, Menu, Settings2, X } from 'lucide-react'
+import { Mail, Menu, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { CountrySwitcher } from './CountrySwitcher'
 export function Header() {
@@ -23,22 +23,10 @@ export function Header() {
             {t('navHome')}
           </NavLink>
           <NavLink to="/create">{t('navCreate')}</NavLink>
+          <NavLink to="/cards">{t('navCards')}</NavLink>
         </nav>
         <div className="header-actions">
           <CountrySwitcher />
-          <NavLink
-            to="/settings"
-            end
-            className="icon-button settings-link"
-            aria-label={t('navSettings')}
-            title={t('navSettings')}
-          >
-            <Settings2 size={18} />
-          </NavLink>
-          <Link to="/create" className="button button-small header-create">
-            {t('create')}
-            <ArrowUpRight size={16} />
-          </Link>
           <button
             className="icon-button menu-button"
             aria-label={t(open ? 'menuClose' : 'menuOpen')}
@@ -54,7 +42,7 @@ export function Header() {
           {[
             ['/', 'navHome'],
             ['/create', 'navCreate'],
-            ['/settings', 'navSettings'],
+            ['/cards', 'navCards'],
           ].map(([path, label]) => (
             <NavLink key={path} to={path} end={path === '/'}>
               {t(label)}
